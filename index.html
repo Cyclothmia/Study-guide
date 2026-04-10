@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Quiz Study Guide – Lessons 3 & 4</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card2: #1e2235;
+    --accent: #7c6af7;
+    --accent2: #4fc3f7;
+    --green: #4caf50;
+    --red: #f44336;
+    --yellow: #ffca28;
+    --text: #e8eaf6;
+    --muted: #8892b0;
+    --border: #2d3155;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, #1a1d27 0%, #1e2235 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.6rem; color: var(--accent); margin-bottom: 4px; }
+  header p { color: var(--muted); font-size: 0.9rem; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--card);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 18px;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-bottom: none;
+    color: var(--muted);
+    background: transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); background: var(--card2); }
+  .tab.active { color: var(--accent); background: var(--bg); border-color: var(--border); }
+
+  .content { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .content.active { display: block; }
+
+  /* Summary Cards */
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 24px 0 10px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .card h3 { font-size: 1rem; color: var(--accent2); margin-bottom: 8px; }
+  .card p, .card li { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+  .card ul { padding-left: 20px; margin-top: 6px; }
+  .card li { margin-bottom: 4px; }
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+  .badge-purple { background: rgba(124,106,247,0.15); color: var(--accent); border: 1px solid rgba(124,106,247,0.3); }
+  .badge-blue   { background: rgba(79,195,247,0.12); color: var(--accent2); border: 1px solid rgba(79,195,247,0.3); }
+  .badge-green  { background: rgba(76,175,80,0.12); color: var(--green); border: 1px solid rgba(76,175,80,0.3); }
+  .badge-yellow { background: rgba(255,202,40,0.12); color: var(--yellow); border: 1px solid rgba(255,202,40,0.3); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media(max-width: 600px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* Flashcards */
+  .flashcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
+  .flashcard {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-height: 130px;
+    cursor: pointer;
+    perspective: 800px;
+  }
+  .flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 130px;
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+  }
+  .flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+  .fc-front, .fc-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    min-height: 130px;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .fc-front { background: var(--card); }
+  .fc-back  { background: var(--card2); transform: rotateY(180deg); }
+  .fc-tag   { font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .fc-q     { font-size: 0.9rem; color: var(--text); line-height: 1.5; }
+  .fc-a     { font-size: 0.85rem; color: #b0bec5; line-height: 1.55; }
+  .fc-hint  { font-size: 0.7rem; color: var(--muted); margin-top: 10px; }
+
+  /* Quiz */
+  .quiz-wrap { max-width: 700px; margin: 0 auto; }
+  .quiz-progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 10px; margin-bottom: 20px; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.4s; }
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+  }
+  .q-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; margin-bottom: 10px; }
+  .q-text { font-size: 1rem; color: var(--text); line-height: 1.6; margin-bottom: 18px; }
+  .options { display: grid; gap: 10px; }
+  .option {
+    background: var(--card2);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text);
+    transition: all 0.18s;
+    text-align: left;
+  }
+  .option:hover:not(:disabled) { border-color: var(--accent); background: rgba(124,106,247,0.1); }
+  .option.correct { border-color: var(--green); background: rgba(76,175,80,0.12); color: #81c784; }
+  .option.wrong   { border-color: var(--red);   background: rgba(244,67,54,0.12);  color: #ef9a9a; }
+  .option:disabled { cursor: default; }
+  .explanation {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: rgba(124,106,247,0.08);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    font-size: 0.83rem;
+    color: var(--muted);
+    display: none;
+    line-height: 1.55;
+  }
+  .explanation.show { display: block; }
+  .quiz-nav { display: flex; gap: 10px; margin-top: 10px; }
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: all 0.18s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .score-card {
+    text-align: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+  }
+  .score-big { font-size: 3rem; font-weight: 700; color: var(--accent); }
+  .score-sub { color: var(--muted); margin: 8px 0 20px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 Quiz Study Guide</h1>
+  <p>Lesson 3: Requirements Gathering &nbsp;·&nbsp; Lesson 4: Diagramming Techniques</p>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('summary3')">📋 L3 Summary</div>
+  <div class="tab" onclick="switchTab('summary4')">📋 L4 Summary</div>
+  <div class="tab" onclick="switchTab('flashcards')">🃏 Flashcards</div>
+  <div class="tab" onclick="switchTab('quiz')">🧠 Practice Quiz</div>
+</div>
+
+<!-- LESSON 3 SUMMARY -->
+<div id="summary3" class="content active">
+
+  <div class="section-label">Definition</div>
+  <div class="card">
+    <h3>What is Requirements Gathering?</h3>
+    <p>A crucial phase in the SDLC that involves <strong>collecting, documenting, and managing</strong> requirements that define the features and functionalities of a system. The success of a project often depends on the <strong>accuracy and completeness</strong> of gathered requirements.</p>
+  </div>
+
+  <div class="section-label">Main Subprocesses (5)</div>
+  <div class="grid2">
+    <div class="card"><h3>1. Stakeholder Identification</h3><p>Identify all stakeholders affected by the system, directly or indirectly. Done via interviews, surveys, or workshops.</p></div>
+    <div class="card"><h3>2. Stakeholder Analysis</h3><p>Understand the needs, expectations, and influence of each stakeholder. Prioritize requirements and manage conflicting interests.</p></div>
+    <div class="card"><h3>3. Problem Definition</h3><p>Clearly define the problems or opportunities the software aims to address. Engage stakeholders in discussions.</p></div>
+    <div class="card"><h3>4. Requirements Documentation</h3><p>Document gathered requirements using requirements documents, use cases, user stories, or prototypes.</p></div>
+    <div class="card"><h3>5. Validation & Verification</h3><p>Ensure requirements are accurate, complete, and consistent. Conduct reviews, walkthroughs, or use validation tools.</p></div>
+  </div>
+
+  <div class="section-label">6-Step Process</div>
+  <div class="card">
+    <ul>
+      <li><strong>Step 1 – Assign Roles:</strong> Identify and engage all relevant stakeholders (end-users, clients, PMs, SMEs).</li>
+      <li><strong>Step 2 – Define Project Scope:</strong> Outline objectives, boundaries, and limitations.</li>
+      <li><strong>Step 3 – Conduct Stakeholder Interviews:</strong> Use open-ended questions to uncover explicit and implicit requirements.</li>
+      <li><strong>Step 4 – Document Requirements:</strong> Write user stories, use cases, or formal specs including functional and non-functional requirements.</li>
+      <li><strong>Step 5 – Verify & Validate:</strong> Verification aligns with stakeholders' intentions; Validation ensures project goals are met.</li>
+      <li><strong>Step 6 – Prioritize Requirements:</strong> Based on project goals and constraints to guide development roadmap.</li>
+    </ul>
+  </div>
+
+  <div class="section-label">7 Gathering Techniques</div>
+  <div class="grid2">
+    <div class="card"><span class="badge badge-purple">1</span><h3>Interviews</h3><p>One-on-one or group sessions with stakeholders for detailed information.</p></div>
+    <div class="card"><span class="badge badge-purple">2</span><h3>Surveys & Questionnaires</h3><p>Distributing forms to a broad audience for large-scale data collection.</p></div>
+    <div class="card"><span class="badge badge-purple">3</span><h3>Workshops</h3><p>Facilitated group sessions for collaboration and conflict resolution.</p></div>
+    <div class="card"><span class="badge badge-purple">4</span><h3>Observation</h3><p>Directly watching end-users to uncover implicit requirements.</p></div>
+    <div class="card"><span class="badge badge-purple">5</span><h3>Prototyping</h3><p>Creating mockups for early visualization and stakeholder feedback.</p></div>
+    <div class="card"><span class="badge badge-purple">6</span><h3>Use Cases & Scenarios</h3><p>Describing system-user interactions to identify functional requirements.</p></div>
+    <div class="card"><span class="badge badge-purple">7</span><h3>Document Analysis</h3><p>Reviewing existing docs (manuals, reports) to extract relevant information.</p></div>
+  </div>
+
+  <div class="section-label">Why It's Important (5 Reasons)</div>
+  <div class="card">
+    <ul>
+      <li><strong>Clarity of Objectives</strong> – Shared understanding of what needs to be achieved</li>
+      <li><strong>Customer Satisfaction</strong> – Product aligns with user desires</li>
+      <li><strong>Scope Definition</strong> – Prevents scope creep, manages expectations</li>
+      <li><strong>Reduced Misunderstandings</strong> – Clear communication prevents ambiguity</li>
+      <li><strong>Risk Mitigation</strong> – Identifies issues early before they become costly</li>
+    </ul>
+  </div>
+
+  <div class="section-label">6 Benefits</div>
+  <div class="grid2">
+    <div class="card"><h3>Cost Reduction</h3><p>Well-defined requirements minimize costly changes and rework later.</p></div>
+    <div class="card"><h3>Customer Satisfaction</h3><p>Product closely matches stakeholder expectations; builds trust.</p></div>
+    <div class="card"><h3>Efficient Resource Utilization</h3><p>Accurate allocation of time, manpower, and technology.</p></div>
+    <div class="card"><h3>Enhanced Quality</h3><p>Clear requirements enable effective testing strategies.</p></div>
+    <div class="card"><h3>Risk Management</h3><p>Identifies potential risks and ambiguities early on.</p></div>
+    <div class="card"><h3>Accurate Planning</h3><p>Realistic schedules, milestones, and deliverables.</p></div>
+  </div>
+
+  <div class="section-label">7 Common Obstacles</div>
+  <div class="card">
+    <ul>
+      <li><strong>Unclear Objectives</strong> – Leads to confusion and scope creep</li>
+      <li><strong>Ambiguous Requirements</strong> – Vague language causes misunderstandings</li>
+      <li><strong>Poor Stakeholder Involvement</strong> – Critical requirements get missed</li>
+      <li><strong>Changing Requirements (Scope Creep)</strong> – Causes delays and increased costs</li>
+      <li><strong>Communication Barriers</strong> – Language gaps and misinterpretations</li>
+      <li><strong>Overreliance on Documentation</strong> – Misses evolving needs without active collaboration</li>
+      <li><strong>Lack of User Involvement</strong> – Results in low usability and acceptance</li>
+    </ul>
+  </div>
+
+  <div class="section-label">Requirements Gathering in Agile (8 Concepts)</div>
+  <div class="grid2">
+    <div class="card"><h3>User Stories</h3><p>Format: "As a [user], I want [action] so that [benefit]." Captures functionality from user perspective.</p></div>
+    <div class="card"><h3>Backlog Refinement</h3><p>Regular sessions (grooming) to review, clarify, and prioritize backlog items.</p></div>
+    <div class="card"><h3>Iterative Development</h3><p>Work organized into time-boxed sprints with continuous refinement.</p></div>
+    <div class="card"><h3>Continuous Stakeholder Collaboration</h3><p>Sprint reviews and planning meetings for ongoing feedback.</p></div>
+    <div class="card"><h3>Prototyping & Visual Aids</h3><p>Wireframes and prototypes for early feedback and alignment.</p></div>
+    <div class="card"><h3>Daily Stand-ups</h3><p>Brief meetings for progress updates and alignment. Also known as daily scrums.</p></div>
+    <div class="card"><h3>Acceptance Criteria</h3><p>Conditions that must be met for a user story to be considered complete.</p></div>
+    <div class="card"><h3>Retrospectives</h3><p>End-of-sprint reflections to improve future processes.</p></div>
+  </div>
+
+  <div class="section-label">Agile Challenges (5)</div>
+  <div class="card">
+    <ul>
+      <li><strong>Changing Priorities</strong> – Balance flexibility with stability</li>
+      <li><strong>Balancing Detail & Flexibility</strong> – Enough detail to guide dev, flexible enough to adapt</li>
+      <li><strong>Effective Communication</strong> – Open channels prevent misunderstandings</li>
+      <li><strong>Overemphasis on Documentation</strong> – Maintain minimal but effective docs</li>
+      <li><strong>Ensuring Continuous Feedback</strong> – Active stakeholder involvement can be challenging</li>
+    </ul>
+  </div>
+
+  <div class="section-label">8 Types of Tools</div>
+  <div class="grid2">
+    <div class="card"><h3>Collaboration Tools</h3><p>Jira, Trello, Asana – task assignment, progress tracking, discussion forums.</p></div>
+    <div class="card"><h3>Document Management</h3><p>Confluence, SharePoint – centralized repository with version control.</p></div>
+    <div class="card"><h3>Survey & Form Builders</h3><p>Google Forms, Typeform, SurveyMonkey – structured data from large audiences.</p></div>
+    <div class="card"><h3>Prototyping Tools</h3><p>Sketch, Balsamiq, Figma – visual/interactive prototypes.</p></div>
+    <div class="card"><h3>Mind Mapping Tools</h3><p>MindMeister, XMind – visualize relationships between requirements.</p></div>
+    <div class="card"><h3>Version Control Systems</h3><p>Git, SVN – track and manage changes to project documentation.</p></div>
+    <div class="card"><h3>Requirements Management Software</h3><p>IBM DOORS, Jama Connect – traceability, impact analysis.</p></div>
+    <div class="card"><h3>Visual Collaboration Tools</h3><p>Miro, Lucidchart – flowcharts, diagrams, visual models.</p></div>
+  </div>
+</div>
+
+<!-- LESSON 4 SUMMARY -->
+<div id="summary4" class="content">
+
+  <div class="section-label">Functional Decomposition Diagram</div>
+  <div class="card">
+    <h3>What is it?</h3>
+    <p>A system design and analysis method that involves <strong>breaking down a complex system into smaller, more manageable components</strong>. It identifies functions and defines how they interact to achieve the system's objectives.</p>
+    <ul style="margin-top:10px;">
+      <li>Goal: Simplify complex systems into understandable parts</li>
+      <li>Makes it easy to design, analyze, and implement complex systems</li>
+      <li>Breaks down using specific functions and relationships</li>
+    </ul>
+  </div>
+
+  <div class="section-label">Use Case Diagram</div>
+  <div class="card">
+    <h3>Definition</h3>
+    <p>A type of <strong>UML (Unified Modeling Language)</strong> diagram that represents the interaction between <strong>actors</strong> and a system to accomplish specific goals. Provides a <strong>high-level view</strong> of the system's functionality.</p>
+  </div>
+
+  <div class="section-label">3 Key Elements of Use Case Diagrams</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>👤 Actors</h3>
+      <p>External entities (users, other systems, hardware) that interact with the system. They <strong>initiate use cases</strong> and receive outcomes. Proper identification is crucial for modeling system behavior.</p>
+    </div>
+    <div class="card">
+      <h3>⭕ Use Cases</h3>
+      <p>Represent specific things the system can do (e.g., "Place Order," "Track Delivery"). Represented by <strong>ovals</strong>.</p>
+    </div>
+    <div class="card">
+      <h3>⬜ System Boundary</h3>
+      <p>A <strong>rectangular box</strong> that defines what is inside vs. outside the system. Establishes clear scope of the system being modeled.</p>
+    </div>
+  </div>
+
+  <div class="section-label">4 Use Case Diagram Relationships</div>
+  <div class="grid2">
+    <div class="card">
+      <span class="badge badge-blue">Association</span>
+      <p>Communication between an <strong>actor and a use case</strong>. Depicted by a plain line connecting them.</p>
+    </div>
+    <div class="card">
+      <span class="badge badge-green">Include</span>
+      <p>A use case <strong>includes</strong> the functionality of another. Dashed arrow pointing from including → included. Promotes reusable design.</p>
+    </div>
+    <div class="card">
+      <span class="badge badge-yellow">Extend</span>
+      <p>A use case can be <strong>extended</strong> under specific conditions. Dashed arrow with keyword "extend." Handles optional/exceptional behavior.</p>
+    </div>
+    <div class="card">
+      <span class="badge badge-purple">Generalization</span>
+      <p>An <strong>"is-a" relationship</strong> between use cases. Arrow points from specialized → general use case.</p>
+    </div>
+  </div>
+
+  <div class="section-label">Data Flow Diagram (DFD)</div>
+  <div class="card">
+    <h3>Definition</h3>
+    <p>Represents the <strong>flow of data</strong> in a system or process. Shows inputs and outputs of each entity and process. <strong>Key facts:</strong></p>
+    <ul style="margin-top:8px;">
+      <li>No control flow, no loops or decision rules</li>
+      <li>Graphical tool useful for communicating with users, managers, and personnel</li>
+      <li>Useful for analyzing both existing and proposed systems</li>
+    </ul>
+  </div>
+
+  <div class="section-label">2 Types of DFD</div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Logical DFD</h3>
+      <p>Focuses on the <strong>system process</strong> and how data flows. High-level without diving into technical implementation. Used for smooth running of systems (e.g., Banking software).</p>
+    </div>
+    <div class="card">
+      <h3>Physical DFD</h3>
+      <p>Shows how data flow is <strong>actually implemented</strong>. Includes additional details like data storage, transmission, and specific technology/components. More specific and close to implementation.</p>
+    </div>
+  </div>
+
+  <div class="section-label">3 DFD Levels</div>
+  <div class="card">
+    <ul>
+      <li><strong>Level 0 (Context Diagram):</strong> Abstract view showing the entire system as a <strong>single bubble</strong> with input/output relationships to external entities.</li>
+      <li><strong>Level 1 DFD:</strong> Breaks down major processes from Level 0 into <strong>sub-processes</strong>. Shows data flows and data stores for each sub-process. Highlights main functions.</li>
+      <li><strong>Level 2 DFD:</strong> Even more detailed — further breaks down sub-processes from Level 1. Each sub-process becomes its own separate process with associated data flows and stores.</li>
+    </ul>
+  </div>
+
+  <div class="section-label">Quick Comparison</div>
+  <div class="card">
+    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+      <tr style="color:var(--accent); border-bottom:1px solid var(--border);">
+        <th style="text-align:left; padding:8px 4px;">Diagram</th>
+        <th style="text-align:left; padding:8px 4px;">Purpose</th>
+        <th style="text-align:left; padding:8px 4px;">Key Visual</th>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); color:var(--muted);">
+        <td style="padding:8px 4px;">Functional Decomposition</td>
+        <td style="padding:8px 4px;">Break down system into functions</td>
+        <td style="padding:8px 4px;">Hierarchical tree</td>
+      </tr>
+      <tr style="border-bottom:1px solid var(--border); color:var(--muted);">
+        <td style="padding:8px 4px;">Use Case Diagram</td>
+        <td style="padding:8px 4px;">Show system-actor interactions</td>
+        <td style="padding:8px 4px;">Actors + ovals + system box</td>
+      </tr>
+      <tr style="color:var(--muted);">
+        <td style="padding:8px 4px;">Data Flow Diagram</td>
+        <td style="padding:8px 4px;">Show data movement in system</td>
+        <td style="padding:8px 4px;">Bubbles + arrows + stores</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<!-- FLASHCARDS -->
+<div id="flashcards" class="content">
+  <p style="color:var(--muted); font-size:0.85rem; margin-bottom:16px;">👆 Tap a card to reveal the answer.</p>
+  <div class="flashcard-grid" id="flashcard-container"></div>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="content">
+  <div class="quiz-wrap">
+    <div id="quiz-main">
+      <div class="quiz-progress">
+        <span id="q-counter">Question 1 of 20</span>
+        <span id="q-score">Score: 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="q-progress"></div></div>
+      <div id="quiz-question-area"></div>
+      <div class="quiz-nav">
+        <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display:none">Next →</button>
+        <button class="btn btn-outline" onclick="restartQuiz()">🔄 Restart</button>
+      </div>
+    </div>
+    <div id="quiz-result" style="display:none">
+      <div class="score-card">
+        <div class="score-big" id="final-score"></div>
+        <div class="score-sub" id="final-msg"></div>
+        <button class="btn btn-primary" onclick="restartQuiz()">🔄 Try Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== TABS =====================
+function switchTab(id) {
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===================== FLASHCARDS =====================
+const flashcards = [
+  { tag:"L3 – Definition", q:"What is Requirements Gathering?", a:"The process of collecting, documenting, and managing requirements that define features and functionalities of a system in the SDLC." },
+  { tag:"L3 – Subprocess", q:"What is the objective of Stakeholder Identification?", a:"To identify all stakeholders (directly or indirectly) affected by the system through interviews, surveys, or workshops." },
+  { tag:"L3 – Subprocess", q:"What does Validation & Verification ensure?", a:"That gathered requirements are accurate, complete, and consistent. Verification checks alignment with intent; Validation checks against project goals." },
+  { tag:"L3 – Process", q:"What happens in Step 5 (Verify & Validate Requirements)?", a:"Verification ensures requirements align with stakeholders' intentions; Validation ensures they meet project goals. Involves feedback loops with stakeholders." },
+  { tag:"L3 – Process", q:"What is Step 6 of Requirements Gathering?", a:"Prioritize Requirements — rank requirements based on importance to project goals, especially when resources and time are limited." },
+  { tag:"L3 – Technique", q:"What is the Observation technique?", a:"Directly watching end-users in their work environment to understand workflows, pain points, and preferences, uncovering implicit requirements." },
+  { tag:"L3 – Technique", q:"What is Prototyping in requirements gathering?", a:"Creating mockups or prototypes of the software to give stakeholders a tangible representation and gather early feedback to refine requirements." },
+  { tag:"L3 – Importance", q:"How does Requirements Gathering help with Scope Definition?", a:"Clearly defined requirements prevent scope creep (uncontrolled changes), manage expectations, and keep the project on track." },
+  { tag:"L3 – Obstacle", q:"What is 'Scope Creep' and why is it a problem?", a:"Frequent changes to requirements during development. It causes project delays, increased costs, and loss of project focus." },
+  { tag:"L3 – Obstacle", q:"What is the risk of Overreliance on Documentation?", a:"Written documentation may not capture evolving needs. It must be complemented with interactive processes like workshops and interviews." },
+  { tag:"L3 – Agile", q:"What is the User Story format in Agile?", a:"'As a [type of user], I want [an action] so that [benefit/value].' Captures functionality from the end-user's perspective." },
+  { tag:"L3 – Agile", q:"What is Backlog Refinement (Grooming)?", a:"Regular sessions to review, clarify, and prioritize backlog items so that high-value items are ready for development in upcoming sprints." },
+  { tag:"L3 – Agile", q:"What are Acceptance Criteria?", a:"Conditions that must be met for a user story to be considered complete. Shared understanding between dev team and stakeholders." },
+  { tag:"L3 – Agile", q:"What are Retrospectives in Agile?", a:"End-of-sprint reflections on what went well, what could improve, and how to refine the development process for future sprints." },
+  { tag:"L3 – Tools", q:"Give 2 examples of Collaboration Tools.", a:"Jira, Trello, and Asana — support task assignment, progress tracking, and team communication." },
+  { tag:"L3 – Tools", q:"What are Prototyping Tools used for in requirements gathering?", a:"Tools like Sketch, Balsamiq, and Figma allow creation of visual or interactive prototypes for clearer stakeholder understanding and feedback." },
+  { tag:"L4 – FDD", q:"What is the goal of Functional Decomposition?", a:"To simplify complex systems into smaller, more manageable, and understandable parts for easier design, analysis, and implementation." },
+  { tag:"L4 – UCD", q:"What are the 3 main elements of a Use Case Diagram?", a:"Actors (external entities), Use Cases (ovals representing system functions), and System Boundary (rectangle defining system scope)." },
+  { tag:"L4 – UCD", q:"What is the Include relationship in Use Case Diagrams?", a:"A use case includes the functionality of another use case. Shown as a dashed arrow from including → included use case. Promotes reusability." },
+  { tag:"L4 – UCD", q:"What is the Extend relationship?", a:"A use case can be extended by another under specific conditions. Uses a dashed arrow with the keyword 'extend.' Handles optional behavior." },
+  { tag:"L4 – UCD", q:"What is Generalization in Use Case Diagrams?", a:"An 'is-a' relationship where one use case is a specialized version of another. Arrow points from specialized → general use case." },
+  { tag:"L4 – DFD", q:"What are 2 key facts about Data Flow Diagrams?", a:"DFDs have no control flow, no loops or decision rules. They are graphical tools useful for communicating with users and managers." },
+  { tag:"L4 – DFD", q:"What is a Logical DFD?", a:"Focuses on the system process and how data flows at a high level, without diving into technical implementation details." },
+  { tag:"L4 – DFD", q:"What is a Physical DFD?", a:"Shows how data flow is actually implemented, including data storage, transmission, and specific technology/system components." },
+  { tag:"L4 – DFD", q:"What is a Level 0 DFD (Context Diagram)?", a:"An abstract view showing the entire system as a single bubble with input/output relationships to external entities. Highest level of abstraction." },
+  { tag:"L4 – DFD", q:"What is a Level 1 DFD?", a:"Breaks down major processes from the context diagram into sub-processes. Highlights main functions of the system." },
+];
+
+function buildFlashcards() {
+  const container = document.getElementById('flashcard-container');
+  flashcards.forEach((fc, i) => {
+    container.innerHTML += `
+      <div class="flashcard" id="fc${i}" onclick="flipCard(${i})">
+        <div class="flashcard-inner">
+          <div class="fc-front">
+            <div class="fc-tag">${fc.tag}</div>
+            <div class="fc-q">${fc.q}</div>
+            <div class="fc-hint">tap to reveal answer</div>
+          </div>
+          <div class="fc-back">
+            <div class="fc-tag">${fc.tag}</div>
+            <div class="fc-a">${fc.a}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+function flipCard(i) { document.getElementById('fc'+i).classList.toggle('flipped'); }
+
+// ===================== QUIZ =====================
+const questions = [
+  { q:"What is the primary purpose of Requirements Gathering in SDLC?", opts:["To write code faster","To collect, document, and manage requirements defining system features","To test the system","To deploy the application"], ans:1, exp:"Requirements Gathering involves collecting, documenting, and managing requirements that define the features and functionalities of a system." },
+  { q:"Which subprocess involves understanding the needs, expectations, and influence of each stakeholder?", opts:["Stakeholder Identification","Problem Definition","Stakeholder Analysis","Requirements Documentation"], ans:2, exp:"Stakeholder Analysis aims to understand the needs, expectations, and influence of each stakeholder to prioritize requirements and manage conflicts." },
+  { q:"In the 6-step process, what is Step 3?", opts:["Define Project Scope","Prioritize Requirements","Conduct Stakeholder Interviews","Document Requirements"], ans:2, exp:"Step 3 is to Conduct Stakeholder Interviews using open-ended questions to uncover both explicit and implicit requirements." },
+  { q:"What is the difference between Verification and Validation of requirements?", opts:["Verification tests code; Validation writes docs","Verification checks alignment with stakeholders' intent; Validation ensures project goals are met","Verification is done last; Validation is done first","No difference"], ans:1, exp:"Verification ensures requirements align with stakeholders' intentions, while Validation ensures documented requirements will meet the project's goals." },
+  { q:"Which technique involves directly watching users in their work environment?", opts:["Interviews","Surveys","Observation","Document Analysis"], ans:2, exp:"Observation involves directly watching end-users to understand their workflows, pain points, and uncover implicit requirements they might not state explicitly." },
+  { q:"'Scope creep' is best described as:", opts:["A testing tool","Uncontrolled changes to project scope","A type of user story","A sprint meeting"], ans:1, exp:"Scope creep refers to requirements that undergo frequent changes during development, leading to delays, increased costs, and challenges maintaining project focus." },
+  { q:"Which benefit of Requirements Gathering refers to realistic schedules and milestones?", opts:["Cost Reduction","Enhanced Quality","Accurate Planning","Risk Management"], ans:2, exp:"Accurate Planning depends on clear requirements, enabling project managers to create realistic schedules, milestones, and deliverables." },
+  { q:"In Agile, what is the User Story format?", opts:['"If [condition] then [action]"','"As a [user], I want [action] so that [benefit]"','"System shall [requirement]"','"Given [context] when [action] then [outcome]"'], ans:1, exp:'User Stories follow: "As a [type of user], I want [an action] so that [benefit/value]." They focus on the user and their goals.' },
+  { q:"What are Acceptance Criteria in Agile?", opts:["Bug reports","Conditions that must be met for a user story to be complete","Sprint schedules","Project budgets"], ans:1, exp:"Acceptance Criteria define conditions that must be met for a user story to be considered complete — a shared understanding between dev team and stakeholders." },
+  { q:"Which tool is used for visual/interactive prototypes? (e.g., Sketch, Figma)", opts:["Collaboration Tools","Document Management Tools","Prototyping Tools","Mind Mapping Tools"], ans:2, exp:"Prototyping Tools like Sketch, Balsamiq, and Figma allow creation of visual or interactive prototypes that help stakeholders understand proposed features." },
+  { q:"Functional Decomposition is a method for:", opts:["Writing user stories","Breaking down complex systems into smaller, manageable components","Creating sprint backlogs","Drawing flowcharts with loops"], ans:1, exp:"Functional decomposition breaks down a complex system into smaller, manageable components by identifying functions and defining how they interact." },
+  { q:"In a Use Case Diagram, what shape represents Use Cases?", opts:["Rectangles","Triangles","Ovals","Diamonds"], ans:2, exp:"Use Cases are represented by ovals. They represent specific things the system can do (e.g., 'Place Order', 'Track Delivery')." },
+  { q:"What does the System Boundary in a Use Case Diagram represent?", opts:["The testing scope","A rectangular box defining what is inside vs. outside the system","The actor's role","A data store"], ans:1, exp:"The System Boundary is a rectangular box surrounding all use cases, visually defining the scope or limits of the system being modeled." },
+  { q:"The Include relationship in Use Case Diagrams is shown by:", opts:["A solid line","A dashed arrow from including → included use case","An arrow pointing from specialized → general","A dotted line with 'extend' keyword"], ans:1, exp:"The Include relationship is denoted by a dashed arrow pointing from the including use case to the included use case, promoting modular and reusable design." },
+  { q:"What is the Extend relationship used for?", opts:["Mandatory steps","Optional or exceptional behavior in use cases","Inheritance between actors","Data flow between processes"], ans:1, exp:"The Extend relationship illustrates that a use case can be extended under specific conditions. It's represented by a dashed arrow with the keyword 'extend' and handles optional behavior." },
+  { q:"Generalization in Use Case Diagrams represents:", opts:["A data flow","Association between actor and use case","An 'is-a' relationship where one use case is a specialized version of another","Mandatory inclusion of functionality"], ans:2, exp:"Generalization establishes an 'is-a' connection, with the arrow pointing from the specialized use case to the general use case." },
+  { q:"Which statement about Data Flow Diagrams is TRUE?", opts:["DFDs have decision rules and loops","DFDs have no control flow and no loops or decision rules","DFDs only model physical systems","DFDs are not graphical tools"], ans:1, exp:"DFDs do not have control flow and no loops or decision rules are present. They are graphical tools useful for communicating with users and managers." },
+  { q:"What is the difference between Logical DFD and Physical DFD?", opts:["Logical is more detailed; Physical is high-level","Logical focuses on processes/flow at high level; Physical shows actual implementation details","They are the same","Logical DFD includes hardware; Physical does not"], ans:1, exp:"Logical DFD focuses on high-level processes without implementation details. Physical DFD shows how data flow is actually implemented, including specific technology components." },
+  { q:"A Level 0 DFD is also called a:", opts:["Entity Diagram","Context Diagram","Class Diagram","Sequence Diagram"], ans:1, exp:"Level 0 DFD is also known as a Context Diagram. It shows the entire system as a single bubble with its relationship to external entities." },
+  { q:"What does a Level 1 DFD do compared to Level 0?", opts:["It adds loops and decisions","It breaks down major processes from Level 0 into sub-processes and highlights main functions","It is the same as Level 0 but with color","It removes the system boundary"], ans:1, exp:"Level 1 DFD decomposes the context diagram into multiple bubbles/processes, breaking the high-level process of Level 0 into sub-processes and highlighting the system's main functions." },
+];
+
+let currentQ = 0, score = 0, answered = false;
+const shuffled = [...questions].sort(() => Math.random() - 0.5).slice(0, 20);
+
+function renderQuestion() {
+  const q = shuffled[currentQ];
+  const pct = (currentQ / shuffled.length) * 100;
+  document.getElementById('q-counter').textContent = `Question ${currentQ+1} of ${shuffled.length}`;
+  document.getElementById('q-score').textContent = `Score: ${score}`;
+  document.getElementById('q-progress').style.width = pct + '%';
+  document.getElementById('next-btn').style.display = 'none';
+  answered = false;
+
+  let html = `<div class="question-card">
+    <div class="q-label">Question ${currentQ+1}</div>
+    <div class="q-text">${q.q}</div>
+    <div class="options">`;
+  q.opts.forEach((opt, i) => {
+    html += `<button class="option" id="opt${i}" onclick="selectAnswer(${i})">${opt}</button>`;
+  });
+  html += `</div>
+    <div class="explanation" id="exp">${q.exp}</div>
+  </div>`;
+  document.getElementById('quiz-question-area').innerHTML = html;
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+  const q = shuffled[currentQ];
+  document.querySelectorAll('.option').forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === selected) btn.classList.add('wrong');
+  });
+  if (selected === q.ans) score++;
+  document.getElementById('q-score').textContent = `Score: ${score}`;
+  document.getElementById('exp').classList.add('show');
+  document.getElementById('next-btn').style.display = 'inline-block';
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= shuffled.length) showResult();
+  else renderQuestion();
+}
+
+function showResult() {
+  document.getElementById('quiz-main').style.display = 'none';
+  document.getElementById('quiz-result').style.display = 'block';
+  const pct = Math.round((score / shuffled.length) * 100);
+  document.getElementById('final-score').textContent = `${score} / ${shuffled.length}`;
+  let msg = pct >= 90 ? "🏆 Outstanding! You're quiz-ready!" :
+            pct >= 75 ? "💪 Great job! Review the weak spots." :
+            pct >= 60 ? "📖 Good effort! More review needed." :
+                        "🔄 Keep studying — you got this, Aj!";
+  document.getElementById('final-msg').textContent = `${pct}% — ${msg}`;
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0;
+  shuffled.sort(() => Math.random() - 0.5);
+  document.getElementById('quiz-main').style.display = 'block';
+  document.getElementById('quiz-result').style.display = 'none';
+  renderQuestion();
+}
+
+buildFlashcards();
+renderQuestion();
+</script>
+</body>
+</html>
